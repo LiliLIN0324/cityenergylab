@@ -1,0 +1,53 @@
+name: Deploy to Cloudflare Pages
+
+# push 到 main 即自动重建 public/ 并部署到 Cloudflare Pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for Cloudflare API token
+        id: token
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::warning::仓库未设置 CLOUDFLARE_API_TOKEN，跳过部署。设置方法见 README 第 5 节。"
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup Node
+        if: steps.token.outputs.ready == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Rebuild public/ from site/
+        if: steps.token.outputs.ready == 'true'
+        run: node make-project.js
+
+      - name: Deploy to Cloudflare Pages
+        if: steps.token.outputs.ready == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: >
+          npx --yes wrangler@4 pages deploy public
+          --project-name city-energy-lab
+          --branch main
+          --commit-dirty=true
