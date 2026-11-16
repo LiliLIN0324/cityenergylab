@@ -119,7 +119,33 @@ D1 을 수정하면 `https://city-energy-lab.pages.dev/api/members` 같은 API �
 
 ---
 
-## 5. 빌드와 배포
+## 5. 변경 사항 배포
+
+### 5.1 일반적인 방법: 커밋 후 push
+
+```bash
+git add -A
+git commit -m "content: 2026-03 세미나 소식 추가"
+git push origin main
+```
+
+이것으로 끝입니다. `.github/workflows/deploy.yml` 워크플로가 `main` 브랜치에 push 될 때마다
+`node make-project.js` 로 `public/` 을 다시 만들고 Cloudflare Pages 로 배포합니다.
+저장소의 **Actions** 탭에서 확인할 수 있고, 초록색 체크가 뜨면 운영 사이트에 이미 반영된 것입니다(약 2분).
+
+최초 1회, 저장소 소유자만: 워크플로에는 `CLOUDFLARE_API_TOKEN` 이라는 저장소 시크릿이 필요합니다.
+
+1. Cloudflare 대시보드 → *My Profile* → *API Tokens* → *Create Token* → *Create Custom Token*
+2. 권한: **Account · Cloudflare Pages · Edit**, **Account · Account Settings · Read**
+3. *Continue to summary* → *Create Token* 후 토큰을 복사합니다(한 번만 표시됩니다)
+4. GitHub 저장소 → *Settings* → *Secrets and variables* → *Actions* → *New repository secret*
+   이름 `CLOUDFLARE_API_TOKEN`, 값에 토큰을 붙여넣습니다
+
+시크릿이 없으면 워크플로는 실패하지 않고 경고를 남긴 뒤 배포만 건너뜁니다.
+
+### 5.2 수동 배포(대체 방법)
+
+Actions 를 쓸 수 없을 때는 컴퓨터에서 직접 배포합니다.
 
 ```bash
 node make-project.js
@@ -134,20 +160,10 @@ functions/ 已生成: 12 个文件
 ✨ Deployment complete! Take a peek over at https://<hash>.city-energy-lab.pages.dev
 ```
 
-운영 주소는 계속 **https://city-energy-lab.pages.dev/** 입니다.
+운영 주소는 항상 **https://city-energy-lab.pages.dev/** 입니다.
 
-> ⚠️ **이 Pages 프로젝트는 GitHub 와 연결되어 있지 않습니다** (Git Provider: No).
-> 따라서 `git push` 만으로는 사이트가 바뀌지 않습니다. 반드시 위의 배포 명령을 실행해야 합니다.
-> (나중에 Cloudflare → Pages → `city-energy-lab` → Settings → Build & deployments 에서 연결할 수 있습니다.
-> 이때 *Build output directory* 는 `public`, 빌드 명령은 비워 두면 됩니다.)
-
-작업 내용은 다음 사람을 위해 커밋해 두십시오.
-
-```bash
-git add -A
-git commit -m "content: 2026-03 세미나 소식 추가"
-git push origin main
-```
+> ℹ️ 이 Pages 프로젝트는 *Direct Upload* 방식으로 만들어져 Cloudflare 가 나중에 Git 저장소와
+> 연결할 수 없습니다. 그래서 Cloudflare 자체 Git 연동 대신 GitHub Actions 로 배포합니다.
 
 ---
 

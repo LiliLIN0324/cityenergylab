@@ -120,7 +120,34 @@ exactly the same. If a change must appear on the site, edit the HTML as well.
 
 ---
 
-## 5. Build and deploy
+## 5. Publish your changes
+
+### 5.1 Normal way: commit and push
+
+```bash
+git add -A
+git commit -m "content: add 2026-03 seminar news"
+git push origin main
+```
+
+That is all. The workflow `.github/workflows/deploy.yml` runs on every push to `main`, rebuilds
+`public/` with `node make-project.js`, and deploys it to Cloudflare Pages. Watch it in the
+repository's **Actions** tab — a green run means the live site is already updated (about 2 minutes).
+
+One-time setup, repository owner only: the workflow needs a repository secret named
+`CLOUDFLARE_API_TOKEN`.
+
+1. Cloudflare dashboard → *My Profile* → *API Tokens* → *Create Token* → *Create Custom Token*
+2. Permissions: **Account · Cloudflare Pages · Edit** and **Account · Account Settings · Read**
+3. *Continue to summary* → *Create Token*, then copy it (it is shown only once)
+4. GitHub repository → *Settings* → *Secrets and variables* → *Actions* → *New repository secret*,
+   name `CLOUDFLARE_API_TOKEN`, paste the token
+
+If the secret is missing, the workflow does not fail: it prints a warning and skips the deploy.
+
+### 5.2 Manual deploy (fallback)
+
+If Actions is unavailable, deploy from your computer:
 
 ```bash
 node make-project.js
@@ -135,20 +162,11 @@ functions/ 已生成: 12 个文件
 ✨ Deployment complete! Take a peek over at https://<hash>.city-energy-lab.pages.dev
 ```
 
-The production address stays **https://city-energy-lab.pages.dev/**.
+The production address always stays **https://city-energy-lab.pages.dev/**.
 
-> ⚠️ **This Pages project is not connected to GitHub** (Git Provider: No).
-> `git push` does **not** update the live site. You must run the deploy command above.
-> (You may connect it later in Cloudflare → Pages → `city-energy-lab` → Settings → Build &
-> deployments; then set *Build output directory* to `public` and leave the build command empty.)
-
-Finally, commit your work so the next person starts from the current version:
-
-```bash
-git add -A
-git commit -m "content: add 2026-03 seminar news"
-git push origin main
-```
+> ℹ️ The Pages project is a *Direct Upload* project, which Cloudflare cannot attach to a Git
+> repository afterwards — that is why the deployment runs through GitHub Actions rather than
+> Cloudflare's own Git integration.
 
 ---
 
