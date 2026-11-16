@@ -1,5 +1,9 @@
 # CITY ENERGY LAB — 网站迁移（Cloudflare Pages + D1）
 
+[English](README.en.md) · [한국어](README.ko.md) · [中文](README.md)
+
+> 编辑、改图、发新闻、部署的详细操作步骤见 [`README.en.md`](README.en.md) / [`README.ko.md`](README.ko.md)。
+
 首尔大学 **CITY ENERGY LAB**（城市能源实验室）原站 `https://cityenergylab.cafe24.com/` 的迁移项目：
 WordPress 站点整站镜像为静态资源，部署在 Cloudflare Pages；实验室信息结构化存入 Cloudflare D1，
 并通过 Pages Functions 提供 JSON API。
