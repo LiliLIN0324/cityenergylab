@@ -1,0 +1,9 @@
+name = "city-energy-lab"
+compatibility_date = "2025-06-01"
+pages_build_output_dir = "public"
+
+# D1 数据库绑定
+[[d1_databases]]
+binding = "DB"
+database_name = "cityenergylab-db"
+database_id = "61a1c384-b8f1-49ef-b5ca-4ee2615240e7"
