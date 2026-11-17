@@ -1,6 +1,8 @@
-# CITY ENERGY LAB — 웹사이트 운영 안내서
+<h1 align="center">CITY ENERGY LAB — 웹사이트 운영 안내서</h1>
 
-[English](README.en.md) · [한국어](README.ko.md) · [中文](README.md)
+<p align="center">
+  <a href="README.en.md">English</a> · <a href="README.ko.md">한국어</a> · <a href="README.md">中文</a>
+</p>
 
 이 저장소는 연구실 웹사이트를 담고 있습니다. 기존 WordPress 사이트
 (`https://cityenergylab.cafe24.com/`)를 **Cloudflare Pages** 에 정적 사이트로 그대로 옮긴 것이고,
@@ -24,7 +26,7 @@
 | --- | --- | --- |
 | 저장소 **쓰기** 권한이 있는 GitHub 계정 | 콘텐츠 수정 및 push | 저장소 소유자: GitHub → Settings → Collaborators → *Add people* |
 | **Pages Edit** + **D1 Edit** 권한이 있는 Cloudflare 계정 | 배포 및 데이터베이스 수정 | Cloudflare 대시보드 → Manage Account → Members → *Invite* |
-| Node.js 18 이상(20 권장), Git | 빌드/배포 명령 실행 | https://nodejs.org/ |
+| Node.js 18 이상(20 권장), Git | 배포 명령(`npx wrangler`) 실행 | https://nodejs.org/ |
 
 최초 1회만 컴퓨터에서 실행하십시오.
 
@@ -41,22 +43,27 @@ npx wrangler login                # 브라우저가 열리면 Cloudflare 로그�
 
 | 경로 | 설명 | 수정 여부 |
 | --- | --- | --- |
-| `site/` | **실제 콘텐츠.** 페이지마다 폴더 하나에 HTML/CSS/이미지 | ✅ 여기를 수정합니다 |
-| `public/` | 배포되는 결과물 (자동 생성) | ❌ 절대 수정 금지 — 매번 삭제 후 재생성됩니다 |
+| `public/` | **실제 콘텐츠.** 페이지마다 폴더 하나에 HTML/CSS/이미지. 배포되는 폴더이기도 합니다 | ✅ 여기를 수정합니다 |
+| `site/` | 옛 사이트를 긁어올 때 만든 임시 복사본. **저장소에 없습니다**(`.gitignore`) | ❌ 수정·커밋하지 않습니다 |
 | `functions/api/` | D1 을 읽어 JSON 을 돌려주는 API (`/api/members`, `/api/publications` …) | API 를 바꿀 때만 |
 | `migrations/` | D1 스키마와 초기 데이터 SQL | 데이터베이스 작업 시 |
 | `wrangler.toml` | Cloudflare 프로젝트 설정 + D1 바인딩 | 거의 수정하지 않음 |
-| `make-project.js` | `site/` → `public/` 복사, `functions/` 재생성 | 수정하지 않음 |
+| `make-project.js` | `public/` 삭제 후 `site/` 복사, `functions/`·`wrangler.toml`·`.gitignore` 재생성. 옛 사이트 재수집용 | 실행하지 않음 |
 | `lib/`, `crawl*.js`, `build-data.js` | 옛 사이트를 복제할 때 쓴 1회성 이전 스크립트 | 수정하지 않음 |
 
 ---
 
 ## 3. 가장 중요한 규칙
 
-> **`site/` 를 수정하십시오. `public/` 은 절대 수정하지 마십시오.**
+> **`public/` 을 수정하십시오. 일상적인 수정에서는 `make-project.js` 를 실행하지 마십시오.**
 
-`node make-project.js` 는 `public/` 폴더를 통째로 삭제한 뒤 `site/` 를 복사합니다.
-`public/` 에서 직접 고친 내용은 다음 빌드에서 모두 사라집니다.
+`public/` 이 저장소의 실제 콘텐츠이자 배포 폴더입니다. 따라서 콘텐츠 수정은
+`public/` 에서 고치고 `git push` 하는 것으로 끝입니다.
+
+`node make-project.js` 는 `public/` 폴더를 통째로 삭제한 뒤 로컬 `site/` 를 복사하고,
+`functions/`, `wrangler.toml`, `.gitignore` 까지 다시 생성합니다. `site/` 는 **저장소에 없으므로**
+(새로 clone 한 폴더에는 존재하지 않습니다) 이 스크립트는 옛 WordPress 사이트를 처음 긁어온
+컴퓨터에서만 쓰는 재수집용 도구입니다. 콘텐츠 수정에는 쓰지 않습니다.
 
 ---
 
@@ -68,21 +75,21 @@ npx wrangler login                # 브라우저가 열리면 Cloudflare 로그�
 
 | 페이지 | 파일 |
 | --- | --- |
-| 소식 목록 | `site/news/index.html` |
-| 구성원 | `site/team-members/index.html` |
-| 졸업생/이전 구성원 | `site/previous-members/index.html` |
-| 논문 목록 | `site/publications/index.html` |
-| 연락처 | `site/contact/index.html` |
-| 개별 소식 글 | `site/<글-주소>/index.html` |
+| 소식 목록 | `public/news/index.html` |
+| 구성원 | `public/team-members/index.html` |
+| 졸업생/이전 구성원 | `public/previous-members/index.html` |
+| 논문 목록 | `public/publications/index.html` |
+| 연락처 | `public/contact/index.html` |
+| 개별 소식 글 | `public/<글-주소>/index.html` |
 
 1. 텍스트 편집기(VS Code, Notepad++ 등)로 파일을 엽니다.
 2. **태그 사이의 글자만** 바꿉니다. `class="…"`, `id="…"`, `style="…"` 는 디자인이므로 그대로 둡니다.
-3. 저장한 뒤 §5 의 빌드·배포를 실행합니다.
+3. 저장한 뒤 커밋하고 push 합니다(§5).
 
 ### 4.2 사진 교체
 
-1. 새 파일을 `site/wp-content/uploads/<연도>/<월>/` 에 넣습니다.
-   (예: `site/wp-content/uploads/2026/03/seminar.jpg`)
+1. 새 파일을 `public/wp-content/uploads/<연도>/<월>/` 에 넣습니다.
+   (예: `public/wp-content/uploads/2026/03/seminar.jpg`)
 2. 가장 간단한 방법은 **기존 파일과 같은 파일 이름**을 쓰는 것입니다. 그러면 HTML 을 고칠 필요가 없습니다.
 3. 파일 이름을 바꾸거나 가로세로 비율이 달라지면: WordPress 페이지는 `srcset` 에 여러 크기의
    변형 파일(예: `photo-768x1024.jpg`)을 나열합니다. 같은 크기의 변형을 함께 준비하거나,
@@ -94,14 +101,14 @@ npx wrangler login                # 브라우저가 열리면 Cloudflare 로그�
 1. 기존 글 폴더를 템플릿으로 복사합니다(PowerShell).
 
    ```powershell
-   Copy-Item -Recurse "site\2025-first-lab-meeting-and-farewell-dinner-with-alumni" "site\2026-03-new-seminar"
+   Copy-Item -Recurse "public\2025-first-lab-meeting-and-farewell-dinner-with-alumni" "public\2026-03-new-seminar"
    ```
 
-2. `site/2026-03-new-seminar/index.html` 에서 `<title>`, `<h1>` 제목, 날짜 줄, 본문 문단,
+2. `public/2026-03-new-seminar/index.html` 에서 `<title>`, `<h1>` 제목, 날짜 줄, 본문 문단,
    이미지 경로를 수정합니다.
-3. 소식 목록 `site/news/index.html` 에 링크를 추가합니다. 기존 항목 블록 하나를 복사해
+3. 소식 목록 `public/news/index.html` 에 링크를 추가합니다. 기존 항목 블록 하나를 복사해
    `href="/2026-03-new-seminar/"` 와 표시 문구를 바꿉니다.
-4. 빌드 후 배포합니다(§5).
+4. 커밋하고 push 합니다(§5).
 
 > 글의 주소는 폴더 이름입니다. 새 폴더 이름은 영문 소문자, 숫자, 하이픈만 사용하십시오.
 > 한글이나 공백이 들어간 폴더 이름은 피하는 것이 좋습니다.
@@ -109,7 +116,7 @@ npx wrangler login                # 브라우저가 열리면 Cloudflare 로그�
 ### 4.4 구성원·논문 목록 수정
 
 이 페이지들은 데이터베이스에서 자동 생성되지 않는 **직접 작성한 HTML** 입니다.
-`site/team-members/index.html` 또는 `site/publications/index.html` 을 §4.1 방식으로 고칩니다.
+`public/team-members/index.html` 또는 `public/publications/index.html` 을 §4.1 방식으로 고칩니다.
 
 ### 4.5 `/api/*` 데이터 수정
 
@@ -130,7 +137,7 @@ git push origin main
 ```
 
 이것으로 끝입니다. `.github/workflows/deploy.yml` 워크플로가 `main` 브랜치에 push 될 때마다
-`node make-project.js` 로 `public/` 을 다시 만들고 Cloudflare Pages 로 배포합니다.
+저장소에 커밋된 `public/` 폴더를 그대로 Cloudflare Pages 로 배포합니다(빌드 단계 없음).
 저장소의 **Actions** 탭에서 확인할 수 있고, 초록색 체크가 뜨면 운영 사이트에 이미 반영된 것입니다(약 2분).
 
 최초 1회, 저장소 소유자만: 워크플로에는 `CLOUDFLARE_API_TOKEN` 이라는 저장소 시크릿이 필요합니다.
@@ -148,17 +155,16 @@ git push origin main
 Actions 를 쓸 수 없을 때는 컴퓨터에서 직접 배포합니다.
 
 ```bash
-node make-project.js
 npx wrangler pages deploy public --project-name city-energy-lab --branch main
 ```
 
 정상 출력 예시:
 
 ```
-public/ 已生成
-functions/ 已生成: 12 个文件
 ✨ Deployment complete! Take a peek over at https://<hash>.city-energy-lab.pages.dev
 ```
+
+`node make-project.js` 는 먼저 실행하지 마십시오. 로컬 `site/` 복사본으로 `public/` 을 덮어씁니다.
 
 운영 주소는 항상 **https://city-energy-lab.pages.dev/** 입니다.
 
@@ -214,7 +220,7 @@ npx wrangler d1 execute cityenergylab-db --remote \
 | --- | --- |
 | 새 페이지가 404 | 폴더 안에 `index.html` 이 있어야 하고, URL 은 폴더 이름이며 대소문자를 구분합니다 |
 | 수정 후 이미지가 깨짐 | `uploads/` 경로 오타, 또는 `srcset` 이 삭제된 변형 파일을 가리킴 → `srcset`/`sizes` 삭제 |
-| 수정 내용이 사라짐 | `public/` 을 고쳤습니다. `site/` 에서 수정하고 다시 빌드하십시오 |
+| 수정 내용이 사라짐 | `make-project.js` 가 실행되어 로컬 `site/` 로 `public/` 이 덮어써졌습니다. `git restore public/` 로 되돌린 뒤 `public/` 에서 직접 수정하십시오 |
 | Windows 에서 `Filename too long` | `git config core.longpaths true` |
 | 배포가 오래 걸림 | 실제로는 변경된 파일만 업로드됩니다. 느리면 대용량 이미지가 원인일 수 있습니다 |
 | 한글/중국어 파일 이름이 이상 동작 | 새로 추가하는 파일은 영문 이름을 권장합니다(기존 파일은 옛 서버 그대로 이전됨) |
@@ -232,4 +238,5 @@ npx wrangler d1 execute cityenergylab-db --remote \
 2. **Cloudflare** → *Manage Account* → *Members* 에서 *Pages Edit*, *D1 Edit* 권한으로 초대합니다.
 3. 본인 컴퓨터에서 한 번만 실행하도록 안내합니다: `git clone …`, `git config core.longpaths true`, `npx wrangler login`.
 4. 이 문서(`README.ko.md`)를 함께 전달합니다.
-5. 권장 사항: Pages 프로젝트를 GitHub 와 연결하면 `git push` 만으로 자동 배포됩니다.
+5. 추가로 연결할 것은 없습니다. GitHub Actions 가 `main` push 마다 자동 배포합니다. Pages 프로젝트는
+   *Direct Upload* 방식이라 나중에 Git 저장소와 연결할 수 없습니다(§5.2).

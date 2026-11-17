@@ -1,6 +1,6 @@
 name: Deploy to Cloudflare Pages
 
-# push 到 main 即自动重建 public/ 并部署到 Cloudflare Pages
+# push 到 main 即部署仓库里的 public/ 到 Cloudflare Pages（无构建步骤，直接上传静态文件）
 on:
   push:
     branches: [main]
@@ -37,10 +37,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-
-      - name: Rebuild public/ from site/
-        if: steps.token.outputs.ready == 'true'
-        run: node make-project.js
 
       - name: Deploy to Cloudflare Pages
         if: steps.token.outputs.ready == 'true'

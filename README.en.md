@@ -1,6 +1,8 @@
-# CITY ENERGY LAB — Website Operations Guide
+<h1 align="center">CITY ENERGY LAB — Website Operations Guide</h1>
 
-[English](README.en.md) · [한국어](README.ko.md) · [中文](README.md)
+<p align="center">
+  <a href="README.en.md">English</a> · <a href="README.ko.md">한국어</a> · <a href="README.md">中文</a>
+</p>
 
 This repository contains the lab website: a static mirror of the original WordPress site
 (`https://cityenergylab.cafe24.com/`) deployed on **Cloudflare Pages**, plus lab data stored in
@@ -24,7 +26,7 @@ It explains how to change text, replace a photo, add a news post, update the dat
 | --- | --- | --- |
 | GitHub account with **write** access to the repo | edit and push content | repo owner: GitHub → Settings → Collaborators → *Add people* |
 | Cloudflare account with **Pages Edit** + **D1 Edit** | deploy and change the database | Cloudflare dashboard → Manage Account → Members → *Invite* |
-| Node.js 18 or newer (20 recommended), Git | run the build/deploy commands | https://nodejs.org/ |
+| Node.js 18 or newer (20 recommended), Git | run the deploy commands (`npx wrangler`) | https://nodejs.org/ |
 
 One-time setup on your computer:
 
@@ -41,22 +43,27 @@ npx wrangler login                # opens a browser, sign in to Cloudflare
 
 | Path | What it is | Do you edit it? |
 | --- | --- | --- |
-| `site/` | **The real content.** Plain HTML/CSS/images, one folder per page | ✅ yes, edit here |
-| `public/` | Generated output that gets deployed | ❌ never — it is deleted and rebuilt |
+| `public/` | **The content.** Plain HTML/CSS/images, one folder per page. Also the folder that gets deployed | ✅ yes, edit here |
+| `site/` | Scratch copy made while crawling the old site. **Not in the repository** (`.gitignore`) | ❌ no — and do not commit it |
 | `functions/api/` | JSON API (`/api/members`, `/api/publications`, …) reading D1 | only if you change the API |
 | `migrations/` | SQL schema and seed data for D1 | for database changes |
 | `wrangler.toml` | Cloudflare project config + D1 binding | rarely |
-| `make-project.js` | Copies `site/` → `public/` and regenerates `functions/` | no |
+| `make-project.js` | Deletes `public/`, copies `site/` into it, regenerates `functions/`, `wrangler.toml`, `.gitignore`. Only for re-crawling the old site | no |
 | `lib/`, `crawl*.js`, `build-data.js` | One-time migration scripts used to copy the old site | no |
 
 ---
 
 ## 3. The one rule
 
-> **Edit `site/`. Never edit `public/`.**
+> **Edit `public/`. Do not run `make-project.js` for everyday edits.**
 
-`node make-project.js` deletes `public/` completely and copies `site/` into it.
-Anything you typed directly into `public/` is lost the next time the project is rebuilt.
+`public/` is the committed content and the deployment folder, so a normal content change is just
+an edit plus `git push`.
+
+`node make-project.js` deletes `public/` completely, copies your local `site/` into it, and also
+regenerates `functions/`, `wrangler.toml` and `.gitignore`. Because `site/` is **not** part of the
+repository (a fresh clone does not have it), this script exists only to re-crawl the old WordPress
+site on the machine that did the crawl — never for content edits.
 
 ---
 
@@ -68,22 +75,22 @@ Every page is a folder with an `index.html` inside:
 
 | Page | File |
 | --- | --- |
-| News list | `site/news/index.html` |
-| Team members | `site/team-members/index.html` |
-| Previous members | `site/previous-members/index.html` |
-| Publications | `site/publications/index.html` |
-| Contact | `site/contact/index.html` |
-| A single news post | `site/<post-slug>/index.html` |
+| News list | `public/news/index.html` |
+| Team members | `public/team-members/index.html` |
+| Previous members | `public/previous-members/index.html` |
+| Publications | `public/publications/index.html` |
+| Contact | `public/contact/index.html` |
+| A single news post | `public/<post-slug>/index.html` |
 
 1. Open the file in any text editor (VS Code, Notepad++, …).
 2. Change **only the text between tags**. Leave `class="…"`, `id="…"` and `style="…"` untouched —
    they carry the layout.
-3. Save, then rebuild and deploy (§5).
+3. Save, then commit and push (§5).
 
 ### 4.2 Replace a photo
 
-1. Put the new file under `site/wp-content/uploads/<year>/<month>/`
-   (for example `site/wp-content/uploads/2026/03/seminar.jpg`).
+1. Put the new file under `public/wp-content/uploads/<year>/<month>/`
+   (for example `public/wp-content/uploads/2026/03/seminar.jpg`).
 2. Easiest: keep the **same file name** as the old photo. Nothing else has to change.
 3. If you use a new name or a different aspect ratio: WordPress pages list several resized
    variants in `srcset` (e.g. `photo-768x1024.jpg`). Either supply matching variants, or delete the
@@ -95,14 +102,14 @@ Every page is a folder with an `index.html` inside:
 1. Copy an existing post folder as a template (PowerShell):
 
    ```powershell
-   Copy-Item -Recurse "site\2025-first-lab-meeting-and-farewell-dinner-with-alumni" "site\2026-03-new-seminar"
+   Copy-Item -Recurse "public\2025-first-lab-meeting-and-farewell-dinner-with-alumni" "public\2026-03-new-seminar"
    ```
 
-2. Edit `site/2026-03-new-seminar/index.html`: the `<title>`, the `<h1>` heading, the date line,
+2. Edit `public/2026-03-new-seminar/index.html`: the `<title>`, the `<h1>` heading, the date line,
    the body paragraphs, and any image paths.
-3. Add a link on the news list `site/news/index.html`: copy one existing entry block and change
+3. Add a link on the news list `public/news/index.html`: copy one existing entry block and change
    its `href="/2026-03-new-seminar/"` and its text.
-4. Rebuild and deploy (§5).
+4. Commit and push (§5).
 
 > The URL of a post is simply its folder name. Use lowercase letters, digits and hyphens only —
 > avoid Korean, Chinese or spaces in new folder names.
@@ -110,7 +117,7 @@ Every page is a folder with an `index.html` inside:
 ### 4.4 Update the members or publications list
 
 These pages are hand-written HTML tables/cards, not generated from the database:
-edit `site/team-members/index.html` or `site/publications/index.html` directly (§4.1).
+edit `public/team-members/index.html` or `public/publications/index.html` directly (§4.1).
 
 ### 4.5 Update the data behind `/api/*`
 
@@ -130,9 +137,10 @@ git commit -m "content: add 2026-03 seminar news"
 git push origin main
 ```
 
-That is all. The workflow `.github/workflows/deploy.yml` runs on every push to `main`, rebuilds
-`public/` with `node make-project.js`, and deploys it to Cloudflare Pages. Watch it in the
-repository's **Actions** tab — a green run means the live site is already updated (about 2 minutes).
+That is all. The workflow `.github/workflows/deploy.yml` runs on every push to `main` and deploys
+the committed `public/` folder to Cloudflare Pages — no build step, so exactly what you committed is
+what goes live. Watch it in the repository's **Actions** tab — a green run means the live site is
+already updated (about 2 minutes).
 
 One-time setup, repository owner only: the workflow needs a repository secret named
 `CLOUDFLARE_API_TOKEN`.
@@ -150,17 +158,16 @@ If the secret is missing, the workflow does not fail: it prints a warning and sk
 If Actions is unavailable, deploy from your computer:
 
 ```bash
-node make-project.js
 npx wrangler pages deploy public --project-name city-energy-lab --branch main
 ```
 
 Expected output:
 
 ```
-public/ 已生成
-functions/ 已生成: 12 个文件
 ✨ Deployment complete! Take a peek over at https://<hash>.city-energy-lab.pages.dev
 ```
+
+Do **not** run `node make-project.js` first: it would replace `public/` with your local `site/` copy.
 
 The production address always stays **https://city-energy-lab.pages.dev/**.
 
@@ -217,7 +224,7 @@ npx wrangler d1 execute cityenergylab-db --remote \
 | --- | --- |
 | New page returns 404 | the folder must contain `index.html`; the URL is the folder name and is case-sensitive |
 | Image is broken after an edit | path typo under `uploads/`, or `srcset` still points at deleted variants → remove `srcset`/`sizes` |
-| My edits disappeared | you edited `public/`; make the change in `site/` and rebuild |
+| My edits disappeared | `make-project.js` was run and overwrote `public/` from a local `site/`; restore with `git restore public/`, then edit `public/` directly |
 | `Filename too long` on Windows | `git config core.longpaths true` |
 | Deployment seems to upload everything | only changed files are actually uploaded; a slow upload is usually a large image |
 | Korean/Chinese file names behave oddly | prefer ASCII file names for anything new; existing files were migrated as-is from the old server |
@@ -235,4 +242,5 @@ Known, intentional gaps (identical to the old site):
 2. **Cloudflare** → *Manage Account* → *Members* → invite with *Pages Edit* and *D1 Edit*.
 3. Ask them to run once: `git clone …`, `git config core.longpaths true`, `npx wrangler login`.
 4. Send them this file (`README.en.md` / `README.ko.md`).
-5. Optional but recommended: connect the Pages project to GitHub so `git push` deploys by itself.
+5. Nothing else to connect: GitHub Actions already deploys on every push to `main`. The Pages
+   project itself is a *Direct Upload* project, so it cannot be Git-connected afterwards (§5.2).

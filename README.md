@@ -1,12 +1,47 @@
-# CITY ENERGY LAB — 网站迁移（Cloudflare Pages + D1）
+<h1 align="center">CITY ENERGY LAB — 网站迁移（Cloudflare Pages + D1）</h1>
 
-[English](README.en.md) · [한국어](README.ko.md) · [中文](README.md)
+<p align="center">
+  <a href="README.en.md">English</a> · <a href="README.ko.md">한국어</a> · <a href="README.md">中文</a>
+</p>
 
-> 编辑、改图、发新闻、部署的详细操作步骤见 [`README.en.md`](README.en.md) / [`README.ko.md`](README.ko.md)。
+<p align="center">首尔大学 CITY ENERGY LAB 官网 · WordPress 整站静态镜像 + Cloudflare D1 数据 API</p>
+
+> 只想改文字、换照片、发新闻？直接看 [**怎么改**](#怎么改)。
+> 完整的分步操作（含权限申请、部署、排错）见 [`README.en.md`](README.en.md) / [`README.ko.md`](README.ko.md)。
 
 首尔大学 **CITY ENERGY LAB**（城市能源实验室）原站 `https://cityenergylab.cafe24.com/` 的迁移项目：
 WordPress 站点整站镜像为静态资源，部署在 Cloudflare Pages；实验室信息结构化存入 Cloudflare D1，
 并通过 Pages Functions 提供 JSON API。
+
+## 怎么改
+
+日常维护只有一条主线：**在 `public/` 里改 HTML 和图片 → 提交推送到 `main` → 自动上线。**
+
+| 想改什么 | 改哪个文件 | 怎么生效 |
+| --- | --- | --- |
+| 某页的文字、标题、日期 | 该页面目录下的 `index.html`，**目录名就是网址**，如 `public/conference-city-energy-lab-at-the-2026-acsp-annual-conference/index.html` | 推送到 `main` |
+| 首页版式、大图 | `public/index.html` + `public/wp-content/themes/` 下的 CSS | 同上 |
+| 换照片、加照片 | 图片放 `public/wp-content/uploads/<年>/<月>/`（见下一节） | 同上 |
+| 新闻列表（全部新闻在这一页） | `public/news/index.html`（约 480 KB 的单页） | 同上 |
+| 单条新闻详情 | `public/<新闻 slug>/index.html` | 同上 |
+| 团队成员 / 毕业生 / 论文列表 | `public/team-members/index.html`、`public/previous-members/index.html`、`public/publications/index.html` | 同上 |
+| 页面上的联系方式、页脚信息 | `public/contact/index.html` 及各页 HTML 里的页脚 | 同上 |
+| `/api/*` 返回的结构化数据 | D1 表 `members`、`publications`、`news`、`lab_profile`（见「数据库」） | 执行 SQL 后立即生效；**页面是静态 HTML，不会跟着变** |
+
+### 改一张照片
+
+1. 新图放进对应年月目录，例如 `public/wp-content/uploads/2026/11/`。
+2. WordPress 会为一张图生成多个尺寸：`xxx.jpg`、`xxx-1024x768.jpg`、`xxx-768x576.jpg`、`xxx-300x225.jpg`。
+   HTML 用 `src` + `srcset` 引用其中几张，所以**沿用旧文件名同名覆盖最省事**；改了文件名就要把各尺寸都放进去，并同步改 HTML 里的引用。
+3. 在页面里搜旧文件名，确认路径是相对形式 `wp-content/uploads/2026/11/xxx.jpg`（页面本身在子目录里，写相对路径才和原站一致）。
+4. 本地预览：`npx wrangler pages dev public`，浏览器打开 http://localhost:8788 看效果。
+5. 提交：`git add -A && git commit -m "update photos" && git push`。
+
+### `site/` 和 `public/` 是什么关系
+
+- `public/`：仓库里的正式内容，也是 Cloudflare Pages 的发布目录（对应 `wrangler.toml` 的 `pages_build_output_dir`）。**要改就改这里。**
+- `site/`：当初抓取原站时的本地工作副本，已写进 `.gitignore`，**不在仓库里**，新克隆的目录中不存在。
+- `make-project.js` 会**先删掉整个 `public/`**，再把 `site/` 复制过去，并重写 `functions/`、`wrangler.toml`、`.gitignore`。日常改内容不要跑它，否则会用你本地的旧副本覆盖 `public/`。
 
 ## 线上地址
 
@@ -20,13 +55,14 @@ WordPress 站点整站镜像为静态资源，部署在 Cloudflare Pages；实�
 ## 结构
 
 ```
-public/                  整站静态镜像（与原站同一套 HTML/CSS/JS/图片，链接已改为站内相对路径）
+public/                  整站静态镜像（与原站同一套 HTML/CSS/JS/图片，链接已改为站内相对路径）——要改内容就改这里
 functions/               Cloudflare Pages Functions（API + Contact Form 7 兼容端点）
 migrations/
   0001_schema.sql        D1 建表
   0002_seed.sql          从原站提取的初始数据
 wrangler.toml            Pages 配置与 D1 绑定
-scripts                 抓取与数据提取脚本（见下）
+.github/workflows/       deploy.yml：push 到 main 自动部署
+site/                    抓取时的本地副本，.gitignore 里不入库（详见「怎么改」）
 ```
 
 ### 抓取/生成脚本
@@ -37,7 +73,7 @@ scripts                 抓取与数据提取脚本（见下）
 | `crawl.js` | 首轮整站抓取（sitemap → 页面 → 资源） |
 | `crawl2.js` | 断点续传补齐缺失资源 |
 | `build-data.js` | 从镜像页面提取实验室信息 → `migrations/0002_seed.sql` + `data-extracted.json` |
-| `make-project.js` | 由 `site/` 生成 `public/`、`functions/`、`wrangler.toml` |
+| `make-project.js` | 由 `site/` 重建 `public/`、`functions/`、`wrangler.toml`（仅重新抓站时用） |
 
 重新抓取并生成：
 
@@ -101,12 +137,17 @@ npx wrangler d1 execute cityenergylab-db --remote --command \
 
 ## 部署
 
+推送到 `main` 即触发 `.github/workflows/deploy.yml` 自动部署：直接上传仓库里的 `public/`，没有构建步骤（需在仓库 Secrets 配好 `CLOUDFLARE_API_TOKEN`）。
+需要手动发布时：
+
 ```bash
 npx wrangler pages deploy public --project-name city-energy-lab --branch main
 ```
 
 Pages 项目：`city-energy-lab`，D1 绑定 `DB = cityenergylab-db`
 （`61a1c384-b8f1-49ef-b5ca-4ee2615240e7`）。
+
+> 手动发布前不要跑 `node make-project.js`，它会把 `public/` 换成你本地的 `site/` 副本。
 
 ## 说明
 
