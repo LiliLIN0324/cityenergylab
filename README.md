@@ -6,8 +6,10 @@
 
 <p align="center">首尔大学 CITY ENERGY LAB 官网 · WordPress 整站静态镜像 + Cloudflare D1 数据 API</p>
 
-> 只想改文字、换照片、发新闻？直接看 [**怎么改**](#怎么改)。
-> 完整的分步操作（含权限申请、部署、排错）见 [`README.en.md`](README.en.md) / [`README.ko.md`](README.ko.md)。
+> **要改网站内容？** 请读面向维护人员（学弟学妹）的分步指南：[`README.ko.md`](README.ko.md)（韩语，主文档）· [`README.en.md`](README.en.md)（英语）。
+> 本文档（中文）保留迁移与实现细节：目录结构、D1、API、部署、脚本。
+>
+> 维护负责人：**@LiliLIN0324**（GitHub）· 实验室 `sjquan@snu.ac.kr` · `02-880-9368`
 
 首尔大学 **CITY ENERGY LAB**（城市能源实验室）原站 `https://cityenergylab.cafe24.com/` 的迁移项目：
 WordPress 站点整站镜像为静态资源，部署在 Cloudflare Pages；实验室信息结构化存入 Cloudflare D1，
@@ -22,7 +24,7 @@ WordPress 站点整站镜像为静态资源，部署在 Cloudflare Pages；实�
 | 某页的文字、标题、日期 | 该页面目录下的 `index.html`，**目录名就是网址**，如 `public/conference-city-energy-lab-at-the-2026-acsp-annual-conference/index.html` | 推送到 `main` |
 | 首页版式、大图 | `public/index.html` + `public/wp-content/themes/` 下的 CSS | 同上 |
 | 换照片、加照片 | 图片放 `public/wp-content/uploads/<年>/<月>/`（见下一节） | 同上 |
-| 新闻列表（全部新闻在这一页） | `public/news/index.html`（约 480 KB 的单页） | 同上 |
+| 新闻列表（全部新闻在这一页） | `public/news/index.html`（约 470 KB 的单页，网页端编辑器会很卡） | 同上 |
 | 单条新闻详情 | `public/<新闻 slug>/index.html` | 同上 |
 | 团队成员 / 毕业生 / 论文列表 | `public/team-members/index.html`、`public/previous-members/index.html`、`public/publications/index.html` | 同上 |
 | 页面上的联系方式、页脚信息 | `public/contact/index.html` 及各页 HTML 里的页脚 | 同上 |
@@ -148,6 +150,21 @@ Pages 项目：`city-energy-lab`，D1 绑定 `DB = cityenergylab-db`
 （`61a1c384-b8f1-49ef-b5ca-4ee2615240e7`）。
 
 > 手动发布前不要跑 `node make-project.js`，它会把 `public/` 换成你本地的 `site/` 副本。
+
+## 维护与联系
+
+| 角色 | 联系 | 负责什么 |
+| --- | --- | --- |
+| 维护负责人 | **@LiliLIN0324**（GitHub，可开 Issue） | 账号权限、部署失败、内容改错后的恢复 |
+| 实验室 | `sjquan@snu.ac.kr` · `02-880-9368` | 对外联络信息 |
+
+文档分工：
+
+| 文档 | 读者 | 内容 |
+| --- | --- | --- |
+| [`README.ko.md`](README.ko.md) | 日常维护者（主文档） | 速查三件事 → 常见修改 → 出错恢复 → 规则 → 管理员章节 |
+| [`README.en.md`](README.en.md) | 英文维护者 | 与韩语版同结构 |
+| `README.md`（本文） | 接手技术工作的人 | 目录结构、D1、API、部署细节 |
 
 ## 说明
 
